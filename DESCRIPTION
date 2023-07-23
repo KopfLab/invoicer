@@ -1,9 +1,9 @@
 Package: invoicer
-Title: Invoicer - KopfLab internal package
+Title: KopfLab Internal Package for Invoicing
 Version: 0.1.1
 Authors@R: 
     person("Sebastian", "Kopf", , "sebastian.kopf@colorado.edu", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-2044-0201"))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`
 Encoding: UTF-8
@@ -15,8 +15,10 @@ Suggests:
 VignetteBuilder: knitr
 Imports: 
     rlang,
+    glue,
     dplyr,
     scales,
+    flextable,
     shiny,
     shinyjs,
     shinydashboard,

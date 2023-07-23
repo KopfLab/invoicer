@@ -36,6 +36,8 @@ vignettes/**/*.pdf
 
 # OAuth2 tokens
 .httr-oauth*
+*token.rds
+*key.json
 
 # knitr and R markdown default cache directories
 /*_cache/
@@ -47,7 +49,12 @@ vignettes/**/*.pdf
 
 # Auxiliary package files
 tmp/
+templates/
 docs/
+*.pdf
+*.xlsx
+*.docx
+*.Rmd
 
 # Pkgdown
 pkgdown/**
