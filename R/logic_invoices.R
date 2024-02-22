@@ -104,54 +104,50 @@ create_transfer_je <- function(template, ref_no, transfer_date, purpose, st_from
 
 # for invoicing
 create_invoice_je <- function(
-    template, ref_no, invoice_date, purpose,
-    st_from, st_to, customer_name, customer_affiliation, completed_by,
+    template, ref_no, account_id, invoice_date, purpose,
+    st_from, st_to, customer_first_name, customer_last_name, customer_affiliation, completed_by,
     description, total
-    #items_description, items_quantity, items_unit_price, items_unit_size
 ) {
 
   # safety checks
   stopifnot(
     "`template` required" = !missing(template),
     "`ref_no` required" = !missing(ref_no),
+    "`account_id` required" = !missing(account_id),
     "`invoice_date` required" = !missing(invoice_date),
     "`purpose` required" = !missing(purpose),
     "`st_from` required" = !missing(st_from),
     "`st_to` required" = !missing(st_to),
-    "`customer_name` required" = !missing(customer_name),
+    "`customer_first_name` required" = !missing(customer_first_name),
+    "`customer_last_name` required" = !missing(customer_last_name),
     "`customer_affiliation` required" = !missing(customer_affiliation),
     "`completed_by` required" = !missing(completed_by),
     "`description` required" = !missing(description),
     "`total` required" = !missing(total)
-    # "`items_description` required" = !missing(items_description),
-    # "`items_quantity` required" = !missing(items_quantity),
-    # "`items_unit_price` required" = !missing(items_unit_price),
-    # "`items_unit_size` required" = !missing(items_unit_size)
   )
 
-  # FIXME: cannot yet handle multiple items in invoice
-  #stopifnot(length(items_description) == 1)
-
   # set values
-  #total <- sum(items_quantity * items_unit_price)
   expense_fund <- stringr::str_match(st_from, "1(\\d\\d)")[1,2]
   service_fund <- stringr::str_match(st_to, "1(\\d\\d)")[1,2]
   values <- list(
     purpose = purpose,
     order_date = invoice_date |> format("%m/%d/%Y"),
-    order_dep = sprintf("%s / %s", customer_affiliation, customer_name),
-    reference_no = ref_no,
+    order_dep = sprintf("%s / %s %s", customer_affiliation, customer_first_name, customer_last_name),
+    reference_no = paste0(account_id, ref_no),
     expense_st = st_from,
-    # as per Marilynn's instructions - NOTE: this might be different for Bert (fund 29), check!!
+    # as per Marilynn's instructions
     expense_account = if (expense_fund == "30") " 530102" else "530100",
     expense_fund = expense_fund,
-    #expense_qty = items_quantity,
-    #expense_unit_price = sprintf("$%s/%s", items_unit_price, items_unit_size),
     expense_desc = description,
     expense_total = total |> scales::label_dollar()(),
     service_st = st_to,
-    # as per Marilynn's instructions - NOTE: this might be different for Bert (fund 29), check!!
-    service_account = if (expense_fund == "30") "380101" else "380100",
+    # as per Marilynn's instructions
+    service_account =
+      if (service_fund == "29") {
+        if (expense_fund == "30") "390123" else "390019"
+      } else {
+        if (expense_fund == "30") "380101" else "380100"
+      },
     service_fund = service_fund,
     service_total = total |> scales::label_dollar()(),
     completed_by = completed_by,
@@ -159,7 +155,7 @@ create_invoice_je <- function(
   )
 
   # journal entry
-  output_filepath <- create_invoice_je_output_path(ref_no, customer_name, customer_affiliation, total)
+  output_filepath <- create_invoice_je_output_path(ref_no, account_id, customer_last_name, total)
   fields <- get_journal_entry_fields()
   create_journal_entry(
     values = values, fields = fields, template_filepath = template, output_filepath = output_filepath
@@ -199,9 +195,9 @@ render_invoice <- function(file_path) {
 # external invoice ============
 
 create_invoice_external <- function(
-    template, reference, ref_no,
+    template, reference, ref_no, account_id,
     invoice_date, purpose, st_to,
-    customer_name, customer_affiliation, customer_email, customer_phone,
+    customer_first_name, customer_last_name, customer_affiliation, customer_email, customer_phone,
     service_lab, store_url,
     invoice_contact, invoice_contact_email,
     services
@@ -212,13 +208,15 @@ create_invoice_external <- function(
     "`template` required" = !missing(template),
     "`reference` required" = !missing(reference),
     "`ref_no` required" = !missing(ref_no),
+    "`account_id` required" = !missing(account_id),
     "`invoice_date` required" = !missing(invoice_date),
     "`purpose` required" = !missing(purpose),
     "`st_to` required" = !missing(st_to),
     "`service_lab` required" = !missing(service_lab),
     "`store_url` required" = !missing(store_url),
-    "`customer_name` required" = !missing(customer_name),
-    "`customer_affiliation` required" = !missing(customer_name),
+    "`customer_first_name` required" = !missing(customer_first_name),
+    "`customer_last_name` required" = !missing(customer_last_name),
+    "`customer_affiliation` required" = !missing(customer_affiliation),
     "`customer_email` required" = !missing(customer_email),
     "`customer_phone` required" = !missing(customer_phone),
     "`invoice_contact` required" = !missing(invoice_contact),
@@ -231,7 +229,7 @@ create_invoice_external <- function(
   values <- list(
     reference = reference,
     service_lab = service_lab,
-    customer_name = customer_name,
+    customer_name = paste(customer_first_name, customer_last_name),
     customer_affiliation = customer_affiliation,
     customer_email = customer_email,
     customer_phone = customer_phone,
@@ -250,7 +248,7 @@ create_invoice_external <- function(
   )
 
   # journal entry
-  output_filepath <- create_invoice_ext_output_path(ref_no, customer_name, customer_affiliation, total)
+  output_filepath <- create_invoice_doc_output_path(ref_no, account_id, customer_last_name, total, internal = FALSE)
   create_invoice(
     values = values, template_filepath = template, output_filepath = output_filepath
   )
@@ -260,9 +258,9 @@ create_invoice_external <- function(
 }
 
 create_invoice_internal <- function(
-  template, reference, ref_no,
+  template, reference, ref_no, account_id,
   invoice_date, purpose, st_from,
-  customer_name, customer_affiliation, customer_email, customer_phone,
+  customer_first_name, customer_last_name, customer_affiliation, customer_email, customer_phone,
   invoice_contact, invoice_contact_email,
   services
 ) {
@@ -272,11 +270,13 @@ create_invoice_internal <- function(
     "`template` required" = !missing(template),
     "`reference` required" = !missing(reference),
     "`ref_no` required" = !missing(ref_no),
+    "`account_id` required" = !missing(account_id),
     "`invoice_date` required" = !missing(invoice_date),
     "`purpose` required" = !missing(purpose),
     "`st_from` required" = !missing(st_from),
-    "`customer_name` required" = !missing(customer_name),
-    "`customer_affiliation` required" = !missing(customer_name),
+    "`customer_first_name` required" = !missing(customer_first_name),
+    "`customer_last_name` required" = !missing(customer_last_name),
+    "`customer_affiliation` required" = !missing(customer_affiliation),
     "`customer_email` required" = !missing(customer_email),
     "`customer_phone` required" = !missing(customer_phone),
     "`invoice_contact` required" = !missing(invoice_contact),
@@ -288,7 +288,7 @@ create_invoice_internal <- function(
   total <- sum(services$price)
   values <- list(
     reference = reference,
-    customer_name = customer_name,
+    customer_name = paste(customer_first_name, customer_last_name),
     customer_affiliation = customer_affiliation,
     customer_email = customer_email,
     ref_no = ref_no,
@@ -306,7 +306,7 @@ create_invoice_internal <- function(
   )
 
   # journal entry
-  output_filepath <- create_invoice_int_output_path(ref_no, customer_name, customer_affiliation, total)
+  output_filepath <- create_invoice_doc_output_path(ref_no, account_id, customer_last_name, total, internal = TRUE)
   create_invoice(
     values = values, template_filepath = template, output_filepath = output_filepath
   )
@@ -320,24 +320,17 @@ create_transfer_je_output_path <- function(ref_no, st_from, st_to, amount) {
   sprintf("%s_transfer_ST%s_to_ST%s_%sUSD.xlsx", ref_no, st_from, st_to, paste(amount))
 }
 
-create_invoice_je_output_path <- function(ref_no, customer_name, customer_affiliation, amount) {
-  sprintf("%s_int_%s_%s_%sUSD.xlsx", ref_no,
-          stringr::str_replace_all(customer_name, "[ ,/.]+", "_"),
-          stringr::str_replace_all(customer_affiliation, "[ ,/.]+", "_"),
-          paste(amount))
+create_invoice_je_output_path <- function(ref_no, account_id, customer_last_name, amount, ext = "xlsx") {
+  sprintf("%s%s_int_%s_%sUSD.%s",
+          account_id, ref_no,
+          stringr::str_replace_all(customer_last_name, "[ ,/.]+", "_"),
+          paste(amount), ext)
 }
 
-create_invoice_ext_output_path <- function(ref_no, customer_name, customer_affiliation, amount) {
-  sprintf("%s_ext_%s_%s_%sUSD.Rmd", ref_no,
-          stringr::str_replace_all(customer_name, "[ ,/.]+", "_"),
-          stringr::str_replace_all(customer_affiliation, "[ ,/.]+", "_"),
-          paste(amount))
+create_invoice_doc_output_path <- function(ref_no, account_id, customer_last_name, amount, internal, ext = "Rmd") {
+  sprintf("%s%s_%s_%s_%sUSD.%s",
+          account_id, ref_no,
+          if (internal) "int" else "ext",
+          stringr::str_replace_all(customer_last_name, "[ ,/.]+", "_"),
+          paste(amount), ext)
 }
-
-create_invoice_int_output_path <- function(ref_no, customer_name, customer_affiliation, amount) {
-  sprintf("%s_int_%s_%s_%sUSD.Rmd", ref_no,
-          stringr::str_replace_all(customer_name, "[ ,/.]+", "_"),
-          stringr::str_replace_all(customer_affiliation, "[ ,/.]+", "_"),
-          paste(amount))
-}
-

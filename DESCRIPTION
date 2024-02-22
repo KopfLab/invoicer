@@ -22,4 +22,6 @@ Imports:
     shiny,
     shinyjs,
     shinydashboard,
-    shinycssloaders
+    shinycssloaders,
+    shinytoastr,
+    prompter

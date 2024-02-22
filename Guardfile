@@ -6,7 +6,7 @@
 
 guard 'process', name: 'Shiny', command: ['R', '-e', " \
 devtools::load_all('.'); \
-invoicer:::start_app(debug = TRUE)"] do
+start_app_dev()"] do
   watch(%r{NAMESPACE})
   watch(%r{R/.+\.R$})
 end
