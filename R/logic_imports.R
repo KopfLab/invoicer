@@ -44,14 +44,14 @@ read_stratocore_order_export <- function(file_path) {
 
   # skip staff and user comment notes
   # FIXME: do we want to do something else with these?
-  comment_lines <- lines |> stringr::str_subset("^\"(User|Staff) comments")
+  comment_lines <- lines |> stringr::str_subset("^,*\"(User|Staff) comments")
   comments <-
     tibble::tibble(
       type = comment_lines |> stringr::str_extract("User|Staff"),
-      comment = comment_lines |> stringr::str_remove("^\"(User|Staff) comments: ?") |>
+      comment = comment_lines |> stringr::str_remove("^,*\"(User|Staff) comments: ?") |>
         stringr::str_remove("\"$")
     )
-  data_lines <- lines |> stringr::str_subset("^\"(User|Staff) comments", negate = TRUE)
+  data_lines <- lines |> stringr::str_subset("^,*\"(User|Staff) comments", negate = TRUE)
   is_line_item <- data_lines |> stringr::str_detect("^\"#")
   header_lines <- which(diff(is_line_item) == 1)
   last_lines <- which(diff(is_line_item) == -1)
