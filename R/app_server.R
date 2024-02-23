@@ -63,7 +63,7 @@ server <- function(data_folder) {
       if (!is.null(values$order)) {
         log_success(user_msg = "Complete")
         shinyjs::toggle("generate_je", condition = values$order$internal)
-        updateTextAreaInput(inputId = "service_summary", value = "")
+        updateTextAreaInput(inputId = "service_summary", value = values$order$purpose_draft)
         shinyjs::show("generator")
       }
     })
@@ -73,19 +73,19 @@ server <- function(data_folder) {
       req(values$order)
       HTML(
         sprintf(
-          "<p>Order #%s looks to be an %s order from %s (%s) for a total of $%s.</p><p>If this is correct, please enter a short 'Service summary' below (this is what usually shows up in accounting systems) and proceed to generate the %s.</p><p><strong>Make sure to save a copy of all sent PDFs in the lab records!</strong></p>",
+          "<p><strong>Order #%s looks to be an %s order from %s (%s) for a total of $%s.</strong></p><ol><li>If this is correct, please enter a short 'Service summary' below (the draft text is the concatenation of all user and staff comments on the order, if there are any). <u>This service summary is what usually shows up in accounting systems</u>.</li><li>Then proceed to generate the %s.</li><li><u>Make sure to save a copy of all sent PDFs in the lab records!</u></li></ol>",
           values$order$order_ref, if (values$order$internal) { "internal" } else { "external" },
           paste(values$order$customer_first, values$order$customer_last), values$order$customer_group,
           values$order$total,
           if (values$order$internal) {
             sprintf(
-              "internal invoice and journal entry.</p><p>Check them both for accuracy (if you make manual changes, make sure they are in both!), save them as PDFs and send the invoice PDF to %s (<a href='mailto:%s'>%s</a>) and the journal entry PDF to %s",
+              "internal invoice and journal entry.</li><li>Check them both for accuracy (if you make manual changes, make sure they are in both!), save them as PDFs and send the invoice PDF to %s (<a href='mailto:%s'>%s</a>) and the journal entry PDF to %s",
               values$order$customer_first, values$order$customer_email, values$order$customer_email,
               accounting_contact
             )
           } else {
             sprintf(
-              "external invoice.</p><p>Check it for accuracy (make manual changes if needed), save as PDF and send the PDF to %s (<a href='mailto:%s'>%s</a>) and %s",
+              "external invoice.</li><li>Check it for accuracy (make manual changes if needed), save as PDF and send the PDF to %s (<a href='mailto:%s'>%s</a>) and %s",
               values$order$customer_first, values$order$customer_email, values$order$customer_email,
               accounting_contact
             )
