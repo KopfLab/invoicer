@@ -321,7 +321,7 @@ create_transfer_je_output_path <- function(ref_no, st_from, st_to, amount) {
 }
 
 create_invoice_je_output_path <- function(ref_no, account_id, customer_last_name, amount, ext = "xlsx") {
-  sprintf("%s%s_int_%s_%sUSD.%s",
+  sprintf("%s%s_%s_%sUSD.%s",
           account_id, ref_no,
           stringr::str_replace_all(customer_last_name, "[ ,/.]+", "_"),
           paste(amount), ext)

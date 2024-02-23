@@ -85,7 +85,7 @@ server <- function(data_folder) {
             )
           } else {
             sprintf(
-              "external invoice.</li><li>Check it for accuracy (make manual changes if needed), save as PDF and send the PDF to %s (<a href='mailto:%s'>%s</a>) and %s",
+              "external invoice.</li><li>Check it for accuracy (make manual changes if needed), save as PDF and send the PDF to %s (<a href='mailto:%s'>%s</a>) and, if the customer wants to pay by cheque or wire transfer, also to %s",
               values$order$customer_first, values$order$customer_email, values$order$customer_email,
               accounting_contact
             )
