@@ -50,10 +50,22 @@ get_journal_entry_fields <- function() {
     "expense_st", 	      "C", 	14L,
     "expense_account",    "D", 	14L,
     "expense_fund", 	    "F", 	14L,
-    "expense_qty", 	      "L", 	14L,
-    "expense_unit_price", "N", 	14L,
-    "expense_desc", 	    "O", 	14L,
-    "expense_total", 	    "S", 	14L,
+    "expense_qty1", 	    "L", 	14L,
+    "expense_unit_price1","M", 	14L,
+    "expense_desc1", 	    "O", 	14L,
+    "expense_total1", 	  "S", 	14L,
+    "expense_qty2", 	    "L", 	15L,
+    "expense_unit_price2","M", 	15L,
+    "expense_desc2", 	    "O", 	15L,
+    "expense_total2", 	  "S", 	15L,
+    "expense_qty3", 	    "L", 	16L,
+    "expense_unit_price3","M", 	16L,
+    "expense_desc3", 	    "O", 	16L,
+    "expense_total3", 	  "S", 	16L,
+    "expense_qty4", 	    "L", 	17L,
+    "expense_unit_price4","M", 	17L,
+    "expense_desc4", 	    "O", 	17L,
+    "expense_total4", 	  "S", 	17L,
     "service_st", 	      "C", 	28L,
     "service_account", 	  "D", 	28L,
     "service_fund", 	    "F", 	28L,
@@ -106,7 +118,7 @@ create_transfer_je <- function(template, ref_no, transfer_date, purpose, st_from
 create_invoice_je <- function(
     template, ref_no, account_id, invoice_date, purpose,
     st_from, st_to, customer_first_name, customer_last_name, customer_affiliation, completed_by,
-    description, total
+    description, services
 ) {
 
   # safety checks
@@ -123,8 +135,11 @@ create_invoice_je <- function(
     "`customer_affiliation` required" = !missing(customer_affiliation),
     "`completed_by` required" = !missing(completed_by),
     "`description` required" = !missing(description),
-    "`total` required" = !missing(total)
+    "`services` data frame with columns `category`, `item`, `unit_price`, `quantity`, `price` required" = !missing(services) && is.data.frame(services) && all(c("category", "item", "unit_price", "quantity", "price") %in% names(services))
   )
+
+  # calculations
+  total <- sum(services$price)
 
   # set values
   expense_fund <- stringr::str_match(st_from, "1(\\d\\d)")[1,2]
@@ -138,8 +153,6 @@ create_invoice_je <- function(
     # as per Marilynn's instructions
     expense_account = if (expense_fund == "30") " 530102" else "530100",
     expense_fund = expense_fund,
-    expense_desc = description,
-    expense_total = total |> scales::label_dollar()(),
     service_st = st_to,
     # as per Marilynn's instructions
     service_account =
@@ -153,6 +166,37 @@ create_invoice_je <- function(
     completed_by = completed_by,
     completed_date = invoice_date |> format("%m/%d/%Y")
   )
+
+  # more detailed expense list (for budget office)
+  if (nrow(services) <= 4L) {
+    # list each individual item
+    for (i in seq_along(services$item)) {
+      values[paste0("expense_qty", i)] <- services$quantity[i]
+      values[paste0("expense_unit_price", i)] <- services$unit_price[i] |> scales::label_dollar()()
+      values[paste0("expense_desc", i)] <- services$item[i]
+      values[paste0("expense_total", i)] <- services$price[i] |> scales::label_dollar()()
+    }
+  } else {
+    # summarize categories
+    services_by_cat <- services |>
+      dplyr::group_by(.data$category) |>
+      dplyr::summarise(
+        total = sum(.data$price),
+        unit_price = if(length(unique(.data$quantity)) == 1L) sum(.data$unit_price) else NA_real_,
+        quantity = if(length(unique(.data$quantity)) == 1L) .data$quantity[1] else NA_integer_
+      )
+    for (i in seq_along(services_by_cat$category)) {
+      if (!is.na(services_by_cat$quantity[i])) {
+        values[paste0("expense_qty", i)] <- services_by_cat$quantity[i]
+        values[paste0("expense_unit_price", i)] <- services_by_cat$unit_price[i] |> scales::label_dollar()()
+      } else {
+        values[paste0("expense_qty", i)] <- "NA"
+        values[paste0("expense_unit_price", i)] <- "NA"
+      }
+      values[paste0("expense_desc", i)] <- services_by_cat$category[i]
+      values[paste0("expense_total", i)] <- services_by_cat$total[i] |> scales::label_dollar()()
+    }
+  }
 
   # journal entry
   output_filepath <- create_invoice_je_output_path(ref_no, account_id, customer_last_name, total)
