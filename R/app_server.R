@@ -133,7 +133,8 @@ server <- function(data_folder) {
               customer_phone = values$order$customer_phone,
               invoice_contact = values$account$contact,
               invoice_contact_email = values$account$contact_email,
-              services = values$order$items[[1]]
+              services = values$order$items[[1]],
+              acknowledgements = values$account$acknowledgements
             ) |> render_invoice()
           } else {
             # external invoice
@@ -154,7 +155,8 @@ server <- function(data_folder) {
               store_url = values$account$store,
               invoice_contact = values$account$contact,
               invoice_contact_email = values$account$contact_email,
-              services = values$order$items[[1]]
+              services = values$order$items[[1]],
+              acknowledgements = values$account$acknowledgements
             ) |> render_invoice()
           }
         },
@@ -200,7 +202,7 @@ server <- function(data_folder) {
             customer_affiliation = values$order$customer_group,
             completed_by = values$account$contact,
             description = values$order$je_summary,
-            total = values$order$total
+            services = values$order$items[[1]]
           )
         },
         error = function(e) {
