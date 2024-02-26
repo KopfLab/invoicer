@@ -73,7 +73,7 @@ read_stratocore_order_export <- function(file_path) {
     customer_group = stringr::str_extract(customer_phone_and_group, "(?<=\\()[^)]*(?=\\)\"$)"),
     customer_phone = customer_phone_and_group |> stringr::str_remove(stringr::fixed(sprintf(" (%s)\"", customer_group))),
     account_nr = stringr::str_extract(account_nr, "(?<=: ).*") |> stringr::str_remove("\\.?\"$"),
-    categories = items$category |> unique() |> paste(collapse = ", "),
+    je_summary = if (nrow(items) == 1L) { items$item } else { items$category |> unique() |> paste(collapse = ", ") },
     total = sum(items$price),
     items = list(items),
     comments = list(comments),

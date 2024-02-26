@@ -200,7 +200,7 @@ create_invoice_external <- function(
     customer_first_name, customer_last_name, customer_affiliation, customer_email, customer_phone,
     service_lab, store_url,
     invoice_contact, invoice_contact_email,
-    services
+    services, acknowledgements
 ) {
 
   # safety checks
@@ -221,7 +221,8 @@ create_invoice_external <- function(
     "`customer_phone` required" = !missing(customer_phone),
     "`invoice_contact` required" = !missing(invoice_contact),
     "`invoice_contact_email` required" = !missing(invoice_contact_email),
-    "`services` data frame with columns `category`, `item`, `unit_price`, `quantity`, `price` required" = !missing(services) && is.data.frame(services) && all(c("category", "item", "unit_price", "quantity", "price") %in% names(services))
+    "`services` data frame with columns `category`, `item`, `unit_price`, `quantity`, `price` required" = !missing(services) && is.data.frame(services) && all(c("category", "item", "unit_price", "quantity", "price") %in% names(services)),
+    "`acknowledgements` required" = !missing(acknowledgements)
   )
 
   # set values
@@ -244,7 +245,8 @@ create_invoice_external <- function(
     items_description = services$item,
     items_quantity = services$quantity,
     items_unit_price = services$unit_price,
-    items_price = services$price
+    items_price = services$price,
+    acknowledgements = acknowledgements
   )
 
   # journal entry
@@ -262,7 +264,7 @@ create_invoice_internal <- function(
   invoice_date, purpose, st_from,
   customer_first_name, customer_last_name, customer_affiliation, customer_email, customer_phone,
   invoice_contact, invoice_contact_email,
-  services
+  services, acknowledgements
 ) {
 
   # safety checks
@@ -281,7 +283,8 @@ create_invoice_internal <- function(
     "`customer_phone` required" = !missing(customer_phone),
     "`invoice_contact` required" = !missing(invoice_contact),
     "`invoice_contact_email` required" = !missing(invoice_contact_email),
-    "`services` data frame with columns `category`, `item`, `unit_price`, `quantity`, `price` required" = !missing(services) && is.data.frame(services) && all(c("category", "item", "unit_price", "quantity", "price") %in% names(services))
+    "`services` data frame with columns `category`, `item`, `unit_price`, `quantity`, `price` required" = !missing(services) && is.data.frame(services) && all(c("category", "item", "unit_price", "quantity", "price") %in% names(services)),
+    "`acknowledgements` required" = !missing(acknowledgements)
   )
 
   # set values
@@ -302,7 +305,8 @@ create_invoice_internal <- function(
     items_description = services$item,
     items_quantity = services$quantity,
     items_unit_price = services$unit_price,
-    items_price = services$price
+    items_price = services$price,
+    acknowledgements = acknowledgements
   )
 
   # journal entry

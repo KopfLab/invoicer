@@ -199,7 +199,7 @@ server <- function(data_folder) {
             customer_last_name = values$order$customer_last,
             customer_affiliation = values$order$customer_group,
             completed_by = values$account$contact,
-            description = values$order$categories,
+            description = values$order$je_summary,
             total = values$order$total
           )
         },
